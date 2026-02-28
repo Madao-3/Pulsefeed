@@ -19,16 +19,22 @@ interface LlmResponse {
   };
 }
 
-function getProviderBaseUrl(provider: string): string {
+// Returns the base URL for chat completions (WITHOUT trailing /chat/completions)
+function getProviderBaseUrl(provider: string, customEndpoint?: string): string {
+  // If user set a custom endpoint, use it directly
+  if (customEndpoint) {
+    // Strip trailing slash
+    return customEndpoint.replace(/\/+$/, "");
+  }
   switch (provider) {
     case "anthropic":
-      return "https://api.anthropic.com";
+      return "https://api.anthropic.com/v1";
     case "openai":
-      return "https://api.openai.com";
+      return "https://api.openai.com/v1";
     case "deepseek":
-      return "https://api.deepseek.com";
+      return "https://api.deepseek.com/v1";
     default:
-      return provider; // Custom endpoint
+      return "https://api.openai.com/v1";
   }
 }
 
@@ -86,7 +92,7 @@ async function callOpenAICompatible(
   maxTokens: number,
   temperature: number
 ): Promise<LlmResponse> {
-  const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+  const res = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -136,10 +142,12 @@ export async function callLlm(
 
   let result: LlmResponse;
 
-  if (provider === "anthropic") {
+  const customEndpoint = configStore.get("llm_endpoint") as string;
+
+  if (provider === "anthropic" && !customEndpoint) {
     result = await callAnthropic(apiKey, model, systemPrompt, userMessage, maxTokens, temperature);
   } else {
-    const baseUrl = getProviderBaseUrl(provider);
+    const baseUrl = getProviderBaseUrl(provider, customEndpoint);
     result = await callOpenAICompatible(
       baseUrl,
       apiKey,
@@ -180,7 +188,30 @@ export async function testConnection(): Promise<{ ok: boolean; message: string }
   try {
     const provider = (configStore.get("llm_provider") as string) || "anthropic";
     const apiKey = configStore.get("llm_api_key") as string;
+    const customEndpoint = configStore.get("llm_endpoint") as string;
+    const model = (configStore.get("llm_model") as string) || "claude-sonnet-4-20250514";
+
     if (!apiKey) return { ok: false, message: "API key not configured" };
+
+    // If custom endpoint is set, always use OpenAI-compatible test
+    if (customEndpoint) {
+      const baseUrl = getProviderBaseUrl(provider, customEndpoint);
+      const res = await fetch(`${baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: 10,
+          messages: [{ role: "user", content: "Hi" }],
+        }),
+        signal: AbortSignal.timeout(10_000),
+      });
+      const body = await res.text();
+      return { ok: res.ok, message: res.ok ? "Connected" : `HTTP ${res.status}: ${body.slice(0, 100)}` };
+    }
 
     if (provider === "anthropic") {
       const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -190,17 +221,24 @@ export async function testConnection(): Promise<{ ok: boolean; message: string }
           "x-api-key": apiKey,
           "anthropic-version": "2023-06-01",
         },
-        body: JSON.stringify({
-          model: (configStore.get("llm_model") as string) || "claude-sonnet-4-20250514",
-          max_tokens: 10,
-          messages: [{ role: "user", content: "Say hi" }],
-        }),
+        body: JSON.stringify({ model, max_tokens: 10, messages: [{ role: "user", content: "Hi" }] }),
         signal: AbortSignal.timeout(10_000),
       });
       return { ok: res.ok, message: res.ok ? "Connected" : `HTTP ${res.status}` };
     }
 
-    return { ok: true, message: "Configuration saved" };
+    // Default: OpenAI-compatible
+    const baseUrl = getProviderBaseUrl(provider);
+    const res = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({ model, max_tokens: 10, messages: [{ role: "user", content: "Hi" }] }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    return { ok: res.ok, message: res.ok ? "Connected" : `HTTP ${res.status}` };
   } catch (error) {
     return { ok: false, message: error instanceof Error ? error.message : "Connection failed" };
   }

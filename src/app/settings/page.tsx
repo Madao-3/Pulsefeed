@@ -166,24 +166,39 @@ export default function SettingsPage() {
           </label>
 
           <label className="block">
+            <span className="text-xs text-muted-foreground">API Endpoint（留空用官方地址，转发商填这里）</span>
+            <input
+              type="text"
+              value={String(getValue("llm_endpoint") || "")}
+              onChange={(e) => update("llm_endpoint", e.target.value)}
+              placeholder="例: https://poloapi.top/v1"
+              className="mt-1 w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+            <span className="text-[10px] text-muted-foreground mt-1 block">
+              转发商地址需带到 /v1，如 https://poloapi.top/v1。留空则使用 Provider 官方地址。
+            </span>
+          </label>
+
+          <label className="block">
             <span className="text-xs text-muted-foreground">Model</span>
-            <select
+            <input
+              type="text"
               value={String(getValue("llm_model"))}
               onChange={(e) => update("llm_model", e.target.value)}
+              placeholder="gpt-4o-mini"
+              list="model-presets"
               className="mt-1 w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-            >
-              <optgroup label="Anthropic">
-                <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
-                <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5</option>
-              </optgroup>
-              <optgroup label="OpenAI">
-                <option value="gpt-4o-mini">GPT-4o Mini</option>
-                <option value="gpt-4o">GPT-4o</option>
-              </optgroup>
-              <optgroup label="DeepSeek">
-                <option value="deepseek-chat">DeepSeek Chat</option>
-              </optgroup>
-            </select>
+            />
+            <datalist id="model-presets">
+              <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
+              <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5</option>
+              <option value="gpt-4o-mini">GPT-4o Mini</option>
+              <option value="gpt-4o">GPT-4o</option>
+              <option value="deepseek-chat">DeepSeek Chat</option>
+            </datalist>
+            <span className="text-[10px] text-muted-foreground mt-1 block">
+              可手动输入任意模型名称，或从预设列表选择
+            </span>
           </label>
 
           <div className="grid grid-cols-2 gap-3">

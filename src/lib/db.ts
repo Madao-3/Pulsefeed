@@ -96,6 +96,7 @@ function initSchema(db: Database.Database) {
       ["llm_max_tokens", "1024"],
       ["llm_temperature", "0.3"],
       ["llm_api_key", '""'],
+      ["llm_endpoint", '""'],
       ["opentwitter_endpoint", '"http://localhost:8001"'],
       ["opentwitter_api_key", '""'],
       ["opennews_endpoint", '"http://localhost:8002"'],
