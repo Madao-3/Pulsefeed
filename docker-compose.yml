@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # ── PulseFeed 主服务 ──
+  pulsefeed:
+    build: .
+    expose:
+      - "3000"
+    volumes:
+      - pulsefeed-data:/app/data
+    environment:
+      - CONFIG_SECRET=${CONFIG_SECRET}
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # ── Nginx 反向代理 + Basic Auth ──
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/.htpasswd:/etc/nginx/.htpasswd:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+      - certbot-webroot:/var/www/certbot:ro
+    depends_on:
+      - pulsefeed
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 32M
+
+  # ── Let's Encrypt certbot (optional, for HTTPS) ──
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./nginx/certs:/etc/letsencrypt
+      - certbot-webroot:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do sleep 12h & wait $${!}; certbot renew --webroot -w /var/www/certbot; done'"
+    profiles:
+      - https
+
+volumes:
+  pulsefeed-data:
+  certbot-webroot:
