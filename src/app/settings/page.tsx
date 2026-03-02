@@ -229,57 +229,75 @@ export default function SettingsPage() {
 
       {/* OpenTwitter MCP */}
       <section className="bg-card border border-border rounded-lg p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium">🐦 OpenTwitter MCP</h2>
-          <TestButton service="opentwitter" label="Test Connection" />
-        </div>
+        <h2 className="text-sm font-medium">🐦 OpenTwitter MCP</h2>
+        <p className="text-xs text-muted-foreground">
+          Twitter/X 数据源，由{" "}
+          <a href="https://6551.io/mcp" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">6551.io</a>{" "}
+          提供。前往该页面获取 API Token，Twitter 和 News 共用同一个 Token。
+        </p>
         <div className="grid gap-3">
           <label className="block">
-            <span className="text-xs text-muted-foreground">Endpoint</span>
+            <span className="text-xs text-muted-foreground">API Endpoint</span>
             <input
               type="text"
               value={String(getValue("opentwitter_endpoint"))}
               onChange={(e) => update("opentwitter_endpoint", e.target.value)}
+              placeholder="https://ai.6551.io"
               className="mt-1 w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
             />
+            <span className="text-[10px] text-muted-foreground mt-1 block">
+              默认 https://ai.6551.io，一般不用改
+            </span>
           </label>
           <label className="block">
-            <span className="text-xs text-muted-foreground">API Key</span>
+            <span className="text-xs text-muted-foreground">API Token</span>
             <div className="mt-1">
               <PasswordField
                 value={String(getValue("opentwitter_api_key"))}
                 onChange={(v) => update("opentwitter_api_key", v)}
+                placeholder="从 6551.io/mcp 获取"
               />
             </div>
           </label>
+          <div className="flex justify-end">
+            <TestButton service="opentwitter" label="Test Connection" />
+          </div>
         </div>
       </section>
 
       {/* OpenNews MCP */}
       <section className="bg-card border border-border rounded-lg p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium">📰 OpenNews MCP</h2>
-          <TestButton service="opennews" label="Test Connection" />
-        </div>
+        <h2 className="text-sm font-medium">📰 OpenNews MCP</h2>
+        <p className="text-xs text-muted-foreground">
+          Crypto 新闻聚合，同样由 6551.io 提供。与 OpenTwitter 共用同一个 Token。
+        </p>
         <div className="grid gap-3">
           <label className="block">
-            <span className="text-xs text-muted-foreground">Endpoint</span>
+            <span className="text-xs text-muted-foreground">API Endpoint</span>
             <input
               type="text"
               value={String(getValue("opennews_endpoint"))}
               onChange={(e) => update("opennews_endpoint", e.target.value)}
+              placeholder="https://ai.6551.io"
               className="mt-1 w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
             />
+            <span className="text-[10px] text-muted-foreground mt-1 block">
+              默认 https://ai.6551.io，一般不用改
+            </span>
           </label>
           <label className="block">
-            <span className="text-xs text-muted-foreground">API Key</span>
+            <span className="text-xs text-muted-foreground">API Token</span>
             <div className="mt-1">
               <PasswordField
                 value={String(getValue("opennews_api_key"))}
                 onChange={(v) => update("opennews_api_key", v)}
+                placeholder="与 Twitter 共用同一个 Token"
               />
             </div>
           </label>
+          <div className="flex justify-end">
+            <TestButton service="opennews" label="Test Connection" />
+          </div>
         </div>
       </section>
 
